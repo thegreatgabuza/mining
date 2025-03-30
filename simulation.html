@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Conveyor Belt Simulation</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #202020;
+        }
+        #container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 5px;
+            max-width: 300px;
+            z-index: 100;
+        }
+        #status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        #alerts {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 5px;
+            max-width: 400px;
+            z-index: 100;
+        }
+        .alert {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .warning {
+            background-color: #e6c700;
+            color: black;
+        }
+        .critical {
+            background-color: #cc0000;
+            color: white;
+        }
+        .normal {
+            background-color: #28a745;
+            color: white;
+        }
+        #camera-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        .camera-btn {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #444;
+            border: none;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .camera-btn:hover {
+            background-color: #666;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 150;
+        }
+        #predictive-dashboard {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            padding: 10px;
+            background-color: rgba(15, 20, 30, 0.9);
+            color: white;
+            border-radius: 5px;
+            z-index: 100;
+            border: 1px solid rgba(70, 90, 120, 0.4);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(70, 90, 120, 0.4);
+        }
+        
+        .dashboard-title {
+            font-size: 18px;
+            margin: 0;
+            font-weight: normal;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        
+        .status-normal {
+            background-color: #28a745;
+        }
+        
+        .status-warning {
+            background-color: #e6c700;
+        }
+        
+        .status-critical {
+            background-color: #cc0000;
+        }
+        
+        .system-status {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .active-alerts-section {
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #e6c700;
+        }
+        
+        .section-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(230, 199, 0, 0.2);
+            color: #e6c700;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .predictive-icon {
+            background-color: rgba(0, 120, 215, 0.2);
+            color: #0078d7;
+        }
+        
+        .alert-count {
+            display: inline-block;
+            background-color: #0078d7;
+            color: white;
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 11px;
+            margin-left: auto;
+        }
+        
+        .alert-item {
+            padding: 8px;
+            margin-bottom: 6px;
+            background-color: rgba(204, 0, 0, 0.1);
+            border-left: 3px solid #cc0000;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .warning-item {
+            background-color: rgba(230, 199, 0, 0.1);
+            border-left: 3px solid #e6c700;
+        }
+        
+        .alert-component {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .alert-message {
+            margin-bottom: 0;
+        }
+        
+        .prediction-item {
+            padding: 8px;
+            margin-bottom: 6px;
+            background-color: rgba(0, 120, 215, 0.1);
+            border-left: 3px solid #0078d7;
+            border-radius: 3px;
+            font-size: 12px;
+            position: relative;
+        }
+        
+        .prediction-time {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #0078d7;
+            font-weight: bold;
+        }
+        
+        .confidence-row {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .confidence-icon {
+            color: #999;
+            margin-right: 4px;
+        }
+        
+        .component-health {
+            margin: 10px 0;
+        }
+        
+        .health-bar {
+            height: 15px;
+            width: 100%;
+            background-color: #444;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .health-value {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        .health-good {
+            background-color: #28a745;
+        }
+        
+        .health-warning {
+            background-color: #e6c700;
+        }
+        
+        .health-critical {
+            background-color: #cc0000;
+        }
+        
+        .predicted-failure {
+            margin-top: 5px;
+            padding: 5px;
+            border-radius: 3px;
+            background-color: rgba(230, 199, 0, 0.2);
+            border-left: 3px solid #e6c700;
+            font-size: 0.9em;
+        }
+        
+        .failure-time {
+            font-weight: bold;
+        }
+
+        .technical-details {
+            margin-top: 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+            background-color: rgba(0, 0, 0, 0.15);
+            padding: 3px;
+            border-radius: 2px;
+        }
+
+        .metric {
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .metric-label {
+            color: #aaa;
+        }
+
+        .metric-value {
+            font-weight: bold;
+        }
+
+        .trend-up {
+            color: #ff4d4d;
+        }
+
+        .trend-down {
+            color: #4dff4d;
+        }
+
+        .trend-stable {
+            color: #e6c700;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="info">
+            <h2>Conveyor Belt Simulation</h2>
+            <p>System Status: <span id="status" class="normal">Normal</span></p>
+            <p>Belt Speed: <span id="speed">100%</span></p>
+            <p>Current Material: <span id="material">Mixed</span></p>
+            <p>System Wear: <span id="wear">0%</span></p>
+            <h3>Controls:</h3>
+            <p>Press M: Perform maintenance</p>
+            <p>Press R: Reset simulation</p>
+        </div>
+        <div id="predictive-dashboard">
+            <div class="dashboard-header">
+                <h2 class="dashboard-title">System Status</h2>
+                <span class="status-indicator" id="dashboard-status-indicator"></span>
+            </div>
+            <div class="system-status" id="dashboard-status-text">Maintenance Recommended</div>
+            
+            <div class="active-alerts-section">
+                <div class="section-header">
+                    <span class="section-icon">!</span>
+                    Active Alerts
+                </div>
+                <div id="dashboard-alerts">
+                    <!-- Active alerts will be displayed here -->
+                </div>
+            </div>
+            
+            <div class="active-alerts-section">
+                <div class="section-header">
+                    <span class="section-icon predictive-icon">P</span>
+                    Predictive Maintenance
+                    <span class="alert-count" id="prediction-count">0</span>
+                </div>
+                <div id="dashboard-predictions">
+                    <!-- Predictive maintenance items will be displayed here -->
+                </div>
+            </div>
+        </div>
+        <div id="component-health-panel" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); width: 300px; padding: 10px; background-color: rgba(15, 20, 30, 0.9); color: white; border-radius: 5px; z-index: 90; border: 1px solid rgba(70, 90, 120, 0.4); display: none;">
+            <div class="dashboard-header">
+                <h2 class="dashboard-title">Component Health</h2>
+                <button id="close-health-panel" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">×</button>
+            </div>
+            
+            <div class="component-health">
+                <div class="component-label">Drive Motor Health: <span id="motor-health-value">100%</span></div>
+                <div class="health-bar">
+                    <div id="motor-health-bar" class="health-value health-good" style="width: 100%"></div>
+                </div>
+                <div id="motor-prediction"></div>
+            </div>
+            
+            <div class="component-health">
+                <div class="component-label">Belt Tension Health: <span id="belt-health-value">100%</span></div>
+                <div class="health-bar">
+                    <div id="belt-health-bar" class="health-value health-good" style="width: 100%"></div>
+                </div>
+                <div id="belt-prediction"></div>
+            </div>
+            
+            <div class="component-health">
+                <div class="component-label">Bearing Health: <span id="bearing-health-value">100%</span></div>
+                <div class="health-bar">
+                    <div id="bearing-health-bar" class="health-value health-good" style="width: 100%"></div>
+                </div>
+                <div id="bearing-prediction"></div>
+            </div>
+            
+            <div class="component-health">
+                <div class="component-label">Roller Health: <span id="roller-health-value">100%</span></div>
+                <div class="health-bar">
+                    <div id="roller-health-bar" class="health-value health-good" style="width: 100%"></div>
+                </div>
+                <div id="roller-prediction"></div>
+            </div>
+        </div>
+        <div id="alerts">
+            <h3>Maintenance Alerts</h3>
+            <div id="alert-container"></div>
+        </div>
+        <div id="camera-controls">
+            <h3>Camera Views</h3>
+            <button class="camera-btn" id="view-main">Main View</button>
+            <button class="camera-btn" id="view-top">Top View</button>
+            <button class="camera-btn" id="view-side">Side View</button>
+            <button class="camera-btn" id="view-front">Front View</button>
+            <button class="camera-btn" id="view-health" style="margin-top: 10px; background-color: #0078d7;">Component Health</button>
+        </div>
+        <div id="loading">Loading scene...</div>
+    </div>
+
+    <script>
+        // Configuration
+        const MATERIALS = [
+            { name: "Bauxite", color: 0xc19a6b },
+            { name: "Alumina", color: 0xffffff },
+            { name: "Aluminium", color: 0xc0c0c0 },
+            { name: "Metallurgical Coal", color: 0x333333 },
+            { name: "Manganese", color: 0x9c9c9c },
+            { name: "Nickel", color: 0xc0c0a9 },
+            { name: "Copper", color: 0xb87333 },
+            { name: "Molybdenum", color: 0x8c8c8c },
+            { name: "Gold", color: 0xffd700 },
+            { name: "Silver", color: 0xc0c0c0 },
+            { name: "Lead", color: 0x444f53 }
+        ];
+
+        const FAILURE_TYPES = [
+            "Motor Overheating",
+            "Belt Misalignment",
+            "Worn Bearings",
+            "Roller Damage",
+            "Drive Pulley Wear",
+            "Belt Tension Issues",
+            "Drive Motor Issues",
+            "Material Buildup",
+            "Structural Fatigue",
+            "Electrical System Issues"
+        ];
+
+        // Three.js Setup
+        let scene, camera, renderer;
+        let conveyor, products = [];
+        let conveyorStatus = "normal"; // normal, warning, critical
+        let systemWear = 0;
+        
+        // Simulation variables
+        let lastTime = 0;
+        let conveyorSpeed = 1;
+        let currentMaterial = 0;
+        let productionRate = 1.5; // seconds between products
+        let timeSinceLastProduct = 0;
+        
+        // System degradation variables
+        let degradationRate = 0.02; // % per second - reduced from 0.05
+        let maintenanceTime = 0;
+        let maintenanceInterval = 60; // seconds
+        
+        // Alerts system
+        let activeAlerts = [];
+        let predictiveWarnings = [];
+        
+        // Add component health tracking variables
+        const components = {
+            motor: {
+                name: "Drive Motor",
+                health: 100,
+                degradationRate: 0.008, // reduced from 0.02
+                failureThreshold: 20,
+                warningThreshold: 50,
+                failures: ["Motor Overheating", "Drive Motor Issues", "Electrical System Issues"],
+                lastRepair: 0,
+                metrics: {
+                    temperature: { value: 42, unit: "°C", normal: { min: 35, max: 50 } },
+                    vibration: { value: 0.5, unit: "mm/s", normal: { min: 0, max: 2.5 } },
+                    current: { value: 4.2, unit: "A", normal: { min: 3.8, max: 5.5 } },
+                    rpm: { value: 1750, unit: "RPM", normal: { min: 1725, max: 1775 } }
+                },
+                history: []
+            },
+            belt: {
+                name: "Belt Tension",
+                health: 100,
+                degradationRate: 0.012, // reduced from 0.03
+                failureThreshold: 15,
+                warningThreshold: 40,
+                failures: ["Belt Misalignment", "Belt Tension Issues"],
+                lastRepair: 0,
+                metrics: {
+                    tension: { value: 35.0, unit: "kN", normal: { min: 30, max: 40 } },
+                    alignment: { value: 0.2, unit: "mm", normal: { min: 0, max: 1.0 } },
+                    wear: { value: 0.05, unit: "mm", normal: { min: 0, max: 0.5 } },
+                    temperature: { value: 38, unit: "°C", normal: { min: 20, max: 45 } }
+                },
+                history: []
+            },
+            bearing: {
+                name: "Bearings",
+                health: 100,
+                degradationRate: 0.006, // reduced from 0.015
+                failureThreshold: 25,
+                warningThreshold: 55,
+                failures: ["Worn Bearings", "Structural Fatigue"],
+                lastRepair: 0,
+                metrics: {
+                    vibration: { value: 0.8, unit: "mm/s", normal: { min: 0, max: 3.0 } },
+                    temperature: { value: 45, unit: "°C", normal: { min: 30, max: 60 } },
+                    lubrication: { value: 95, unit: "%", normal: { min: 80, max: 100 } },
+                    noise: { value: 68, unit: "dB", normal: { min: 60, max: 80 } }
+                },
+                history: []
+            },
+            roller: {
+                name: "Rollers",
+                health: 100,
+                degradationRate: 0.01, // reduced from 0.025
+                failureThreshold: 30,
+                warningThreshold: 60,
+                failures: ["Roller Damage", "Drive Pulley Wear", "Material Buildup"],
+                lastRepair: 0,
+                metrics: {
+                    runout: { value: 0.1, unit: "mm", normal: { min: 0, max: 0.4 } },
+                    surfaceWear: { value: 5, unit: "%", normal: { min: 0, max: 20 } },
+                    rotationalSpeed: { value: 120, unit: "RPM", normal: { min: 115, max: 125 } },
+                    loading: { value: 55, unit: "%", normal: { min: 20, max: 80 } }
+                },
+                history: []
+            }
+        };
+
+        // Add a random factor for more realistic degradation
+        let simulationTime = 0;
+        
+        // Initialize everything when window loads
+        window.addEventListener('load', function() {
+            init();
+            animate();
+            
+            // Setup camera controls
+            setupCameraControls();
+            
+            // Setup keyboard controls
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'm' || event.key === 'M') {
+                    performMaintenance();
+                } else if (event.key === 'r' || event.key === 'R') {
+                    resetSimulation();
+                }
+            });
+        });
+
+        function init() {
+            try {
+                // Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x888888);
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(-10, 10, 15);
+                camera.lookAt(0, 0, 0);
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.getElementById('container').appendChild(renderer.domElement);
+                
+                // Enable shadows
+                renderer.shadowMap.enabled = true;
+                
+                // Hide loading message
+                document.getElementById('loading').style.display = 'none';
+                
+                // Add ambient light for overall illumination
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                scene.add(ambientLight);
+                
+                // Add directional light for shadows
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+                directionalLight.position.set(5, 10, 7);
+                directionalLight.castShadow = true;
+                scene.add(directionalLight);
+                
+                // Create conveyor belt
+                createConveyorBelt();
+                
+                // Create floor
+                const floorGeometry = new THREE.PlaneGeometry(50, 50);
+                const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.rotation.x = -Math.PI / 2;
+                floor.receiveShadow = true;
+                scene.add(floor);
+                
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+                
+                // Create initial product
+                setTimeout(() => createProduct(0), 100);
+                
+                // Set initial system wear to show status immediately
+                systemWear = 35;
+                document.getElementById('wear').textContent = `${Math.floor(systemWear)}%`;
+                updateStatus("warning");
+                
+                // Initialize component health with some degradation
+                initializeComponentHealthWithWear();
+                
+                // Generate initial alerts and predictions
+                generateInitialAlertsAndPredictions();
+                
+                console.log("Three.js initialization complete");
+            } catch (error) {
+                console.error("Error initializing Three.js:", error);
+                alert("Error initializing 3D scene: " + error.message);
+                document.getElementById('loading').textContent = "Error loading scene. Please refresh the page.";
+            }
+        }
+
+        function createConveyorBelt() {
+            conveyor = {
+                belt: null,
+                rollers: [],
+                supports: []
+            };
+            
+            // Belt dimensions
+            const beltLength = 20;
+            const beltWidth = 4;
+            
+            // Create the main belt - make it very visible
+            const beltGeometry = new THREE.BoxGeometry(beltLength, 0.2, beltWidth);
+            const beltMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x28a745 // Green
+            });
+            conveyor.belt = new THREE.Mesh(beltGeometry, beltMaterial);
+            conveyor.belt.position.y = 1;
+            conveyor.belt.receiveShadow = true;
+            scene.add(conveyor.belt);
+            
+            // Create end rollers
+            const rollerGeometry = new THREE.CylinderGeometry(0.5, 0.5, beltWidth + 0.2, 24);
+            const rollerMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            
+            // Add end rollers
+            for (let i = -1; i <= 1; i += 2) {
+                const roller = new THREE.Mesh(rollerGeometry, rollerMaterial);
+                roller.rotation.z = Math.PI / 2;
+                roller.position.set(i * (beltLength / 2 - 0.5), 1, 0);
+                roller.castShadow = true;
+                scene.add(roller);
+                conveyor.rollers.push(roller);
+            }
+            
+            // Add supports
+            const supportGeometry = new THREE.BoxGeometry(0.3, 1, 0.3);
+            const supportMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
+            
+            for (let i = -1; i <= 1; i += 2) {
+                for (let j = -1; j <= 1; j += 2) {
+                    const support = new THREE.Mesh(supportGeometry, supportMaterial);
+                    support.position.set(i * (beltLength / 2 - 0.2), 0.5, j * (beltWidth / 2));
+                    support.castShadow = true;
+                    scene.add(support);
+                    conveyor.supports.push(support);
+                }
+            }
+        }
+
+        function createProduct(materialIndex) {
+            const material = MATERIALS[materialIndex];
+            
+            // Create a simple box
+            const boxGeometry = new THREE.BoxGeometry(1, 0.6, 0.8);
+            const boxMaterial = new THREE.MeshStandardMaterial({ 
+                color: material.color
+            });
+            
+            const box = new THREE.Mesh(boxGeometry, boxMaterial);
+            box.position.set(-9, 1.5, 0);
+            box.castShadow = true;
+            scene.add(box);
+            
+            // Add to products array
+            products.push({
+                mesh: box,
+                materialName: material.name
+            });
+            
+            // Update UI
+            document.getElementById('material').textContent = material.name;
+        }
+
+        function updateProducts(deltaTime) {
+            // Move existing products
+            for (let i = products.length - 1; i >= 0; i--) {
+                const product = products[i];
+                
+                // Move forward
+                product.mesh.position.x += conveyorSpeed * deltaTime * 5;
+                
+                // Add some rotation
+                product.mesh.rotation.y += deltaTime * 0.1;
+                
+                // Remove if it passed the end
+                if (product.mesh.position.x > 10) {
+                    scene.remove(product.mesh);
+                    products.splice(i, 1);
+                }
+            }
+            
+            // Create new products
+            timeSinceLastProduct += deltaTime;
+            if (timeSinceLastProduct >= productionRate / conveyorSpeed) {
+                createProduct(currentMaterial);
+                
+                // Change material occasionally
+                if (Math.random() < 0.3) {
+                    currentMaterial = (currentMaterial + 1) % MATERIALS.length;
+                }
+                
+                timeSinceLastProduct = 0;
+            }
+        }
+
+        function updateDegradation(deltaTime) {
+            // Increase system wear over time
+            systemWear += degradationRate * deltaTime * conveyorSpeed;
+            
+            // Cap at 100%
+            systemWear = Math.min(systemWear, 100);
+            
+            // Update wear display
+            document.getElementById('wear').textContent = `${Math.floor(systemWear)}%`;
+            
+            // Update status based on wear
+            if (systemWear < 30) {
+                updateStatus("normal");
+            } else if (systemWear < 70) {
+                updateStatus("warning");
+            } else {
+                updateStatus("critical");
+            }
+            
+            // Generate random alerts based on wear
+            maintenanceTime += deltaTime;
+            if (maintenanceTime > maintenanceInterval) {
+                if (Math.random() < systemWear / 100) {
+                    generateAlert();
+                }
+                maintenanceTime = 0;
+            }
+        }
+
+        function updateStatus(status) {
+            if (status !== conveyorStatus) {
+                conveyorStatus = status;
+                
+                // Update UI
+                const statusEl = document.getElementById('status');
+                statusEl.className = status;
+                statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                
+                // Update conveyor color
+                let color;
+                switch (status) {
+                    case "normal":
+                        color = 0x28a745; // Green
+                        break;
+                    case "warning":
+                        color = 0xe6c700; // Yellow
+                        break;
+                    case "critical":
+                        color = 0xcc0000; // Red
+                        break;
+                }
+                
+                if (conveyor && conveyor.belt) {
+                    conveyor.belt.material.color.setHex(color);
+                }
+            }
+        }
+
+        function generateAlert() {
+            const alertType = Math.random() < systemWear / 100 ? "critical" : "warning";
+            const failureIndex = Math.floor(Math.random() * FAILURE_TYPES.length);
+            const failureType = FAILURE_TYPES[failureIndex];
+            
+            // Determine which component this failure is related to
+            let componentKey = null;
+            Object.keys(components).forEach(key => {
+                if (components[key].failures.includes(failureType)) {
+                    componentKey = key;
+                }
+            });
+            
+            // Create alert message
+            let message;
+            if (alertType === "warning") {
+                message = `WARNING: Possible ${failureType} detected. Maintenance recommended.`;
+            } else {
+                message = `CRITICAL: ${failureType} imminent. Immediate maintenance required!`;
+                
+                // Slow down conveyor for critical issues
+                conveyorSpeed = 0.4;
+                document.getElementById('speed').textContent = "40% (REDUCED)";
+            }
+            
+            // Add to alerts
+            const alert = { 
+                type: alertType, 
+                message, 
+                time: Date.now(),
+                componentKey // Store the component key for grouping alerts
+            };
+            activeAlerts.push(alert);
+            
+            // Update UI
+            updateAlertDisplay();
+            updateDashboard();
+            
+            // Remove alert after some time
+            setTimeout(() => {
+                const index = activeAlerts.indexOf(alert);
+                if (index > -1) {
+                    activeAlerts.splice(index, 1);
+                    updateAlertDisplay();
+                    updateDashboard();
+                    
+                    // Reset speed if critical alert is cleared
+                    if (alertType === "critical" && !activeAlerts.some(a => a.type === "critical")) {
+                        conveyorSpeed = 1;
+                        document.getElementById('speed').textContent = "100%";
+                    }
+                }
+            }, alertType === "critical" ? 15000 : 10000);
+        }
+
+        function updateAlertDisplay() {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = '';
+            
+            if (activeAlerts.length === 0) {
+                const div = document.createElement('div');
+                div.className = 'alert normal';
+                div.textContent = 'No active alerts';
+                container.appendChild(div);
+            } else {
+                // Sort alerts by type (critical first) and time
+                const sortedAlerts = [...activeAlerts].sort((a, b) => {
+                    if (a.type === b.type) {
+                        return b.time - a.time; // Newest first
+                    }
+                    return a.type === "critical" ? -1 : 1;
+                });
+                
+                // Display alerts
+                sortedAlerts.forEach(alert => {
+                    const div = document.createElement('div');
+                    div.className = `alert ${alert.type}`;
+                    div.textContent = alert.message;
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        function simulate(deltaTime) {
+            // Rotate rollers
+            conveyor.rollers.forEach(roller => {
+                roller.rotation.x += conveyorSpeed * deltaTime * 2;
+            });
+            
+            // Update products
+            updateProducts(deltaTime);
+            
+            // Update system degradation
+            updateDegradation(deltaTime);
+            
+            // Update component health
+            updateComponentHealth(deltaTime);
+        }
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+            
+            // Calculate delta time
+            const deltaTime = (time - lastTime) / 1000;
+            lastTime = time;
+            
+            // Run simulation
+            if (deltaTime < 0.2) { // Skip large jumps
+                simulate(deltaTime);
+            }
+            
+            // Render scene
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        function setupCameraControls() {
+            document.getElementById('view-main').addEventListener('click', function() {
+                moveCamera(-10, 10, 15, 0, 0, 0);
+            });
+
+            document.getElementById('view-top').addEventListener('click', function() {
+                moveCamera(0, 20, 0, 0, 0, 0);
+            });
+
+            document.getElementById('view-side').addEventListener('click', function() {
+                moveCamera(20, 5, 0, 0, 0, 0);
+            });
+
+            document.getElementById('view-front').addEventListener('click', function() {
+                moveCamera(0, 5, 20, 0, 0, 0);
+            });
+            
+            // Add toggle for component health panel
+            document.getElementById('view-health').addEventListener('click', function() {
+                const panel = document.getElementById('component-health-panel');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
+            
+            // Add close button for component health panel
+            document.getElementById('close-health-panel').addEventListener('click', function() {
+                document.getElementById('component-health-panel').style.display = 'none';
+            });
+        }
+
+        function moveCamera(x, y, z, targetX, targetY, targetZ) {
+            if (!camera) return;
+            
+            // Set camera position directly
+            camera.position.set(x, y, z);
+            camera.lookAt(targetX, targetY, targetZ);
+        }
+
+        function performMaintenance() {
+            // Reset wear
+            systemWear = Math.max(0, systemWear - 50);
+            
+            // Repair components
+            Object.keys(components).forEach(key => {
+                const component = components[key];
+                // Not fully repair - realistic maintenance
+                const repairAmount = 50 + Math.random() * 30;
+                component.health = Math.min(100, component.health + repairAmount);
+                component.lastRepair = simulationTime;
+                
+                // Update UI
+                document.getElementById(`${key}-health-value`).textContent = `${Math.floor(component.health)}%`;
+                const healthBar = document.getElementById(`${key}-health-bar`);
+                healthBar.style.width = `${component.health}%`;
+                
+                if (component.health >= component.warningThreshold) {
+                    healthBar.className = "health-value health-good";
+                    document.getElementById(`${key}-prediction`).innerHTML = '';
+                } else if (component.health >= component.failureThreshold) {
+                    healthBar.className = "health-value health-warning";
+                } else {
+                    healthBar.className = "health-value health-critical";
+                }
+            });
+            
+            // Clear alerts
+            activeAlerts = [];
+            updateAlertDisplay();
+            
+            // Reset speed
+            conveyorSpeed = 1;
+            document.getElementById('speed').textContent = "100%";
+            
+            // Update status
+            updateStatus(systemWear < 30 ? "normal" : (systemWear < 70 ? "warning" : "critical"));
+            
+            // Show maintenance message
+            const alert = { 
+                type: "normal", 
+                message: "Maintenance performed successfully!", 
+                time: Date.now() 
+            };
+            activeAlerts.push(alert);
+            updateAlertDisplay();
+            
+            // Remove maintenance message after some time
+            setTimeout(() => {
+                const index = activeAlerts.indexOf(alert);
+                if (index > -1) {
+                    activeAlerts.splice(index, 1);
+                    updateAlertDisplay();
+                }
+            }, 5000);
+        }
+
+        function resetSimulation() {
+            // Reset all variables
+            systemWear = 0;
+            conveyorSpeed = 1;
+            activeAlerts = [];
+            simulationTime = 0;
+            
+            // Reset component health
+            Object.keys(components).forEach(key => {
+                components[key].health = 100;
+                components[key].lastRepair = 0;
+                
+                // Update UI
+                document.getElementById(`${key}-health-value`).textContent = "100%";
+                const healthBar = document.getElementById(`${key}-health-bar`);
+                healthBar.style.width = "100%";
+                healthBar.className = "health-value health-good";
+                document.getElementById(`${key}-prediction`).innerHTML = '';
+            });
+            
+            // Remove all products
+            products.forEach(product => {
+                scene.remove(product.mesh);
+            });
+            products = [];
+            
+            // Reset UI
+            document.getElementById('speed').textContent = "100%";
+            document.getElementById('wear').textContent = "0%";
+            updateStatus("normal");
+            updateAlertDisplay();
+            
+            // Show reset message
+            const alert = { 
+                type: "normal", 
+                message: "Simulation reset!", 
+                time: Date.now() 
+            };
+            activeAlerts.push(alert);
+            updateAlertDisplay();
+            
+            // Remove reset message after some time
+            setTimeout(() => {
+                const index = activeAlerts.indexOf(alert);
+                if (index > -1) {
+                    activeAlerts.splice(index, 1);
+                    updateAlertDisplay();
+                }
+            }, 5000);
+        }
+
+        // Update function to track component health and predict failures with technical metrics
+        function updateComponentHealth(deltaTime) {
+            simulationTime += deltaTime;
+            
+            // Get current simulation date - start with today and add simulation time
+            const currentDate = new Date();
+            const simulationDate = new Date(currentDate.getTime() + (simulationTime * 10000)); // accelerate time
+            
+            // Clear predictive warnings array to rebuild it
+            predictiveWarnings = [];
+            
+            Object.keys(components).forEach(key => {
+                const component = components[key];
+                
+                // Calculate random degradation factor (more realistic variations)
+                let randomFactor = 1.0 + (Math.sin(simulationTime * 0.1 + component.lastRepair) * 0.2);
+                
+                // Higher system wear accelerates degradation
+                const wearMultiplier = 1.0 + (systemWear / 200);
+                
+                // Calculate degradation for this component
+                const degradation = component.degradationRate * deltaTime * conveyorSpeed * randomFactor * wearMultiplier;
+                
+                // Apply degradation
+                component.health = Math.max(0, component.health - degradation);
+                
+                // Update metrics
+                updateComponentMetrics(key, component, deltaTime, wearMultiplier);
+                
+                // Save historical data every 5 seconds of simulation time
+                if (Math.floor(simulationTime) % 5 === 0 && component.history.length === 0 || 
+                    component.history.length > 0 && simulationTime - component.history[component.history.length-1].time >= 5) {
+                    component.history.push({
+                        time: simulationTime,
+                        health: component.health,
+                        metrics: JSON.parse(JSON.stringify(component.metrics))
+                    });
+                    
+                    // Keep only last 50 entries
+                    if (component.history.length > 50) {
+                        component.history.shift();
+                    }
+                }
+                
+                // Update health display
+                document.getElementById(`${key}-health-value`).textContent = `${Math.floor(component.health)}%`;
+                
+                // Update health bar
+                const healthBar = document.getElementById(`${key}-health-bar`);
+                healthBar.style.width = `${component.health}%`;
+                
+                // Update health status class
+                healthBar.className = "health-value";
+                if (component.health < component.failureThreshold) {
+                    healthBar.classList.add("health-critical");
+                } else if (component.health < component.warningThreshold) {
+                    healthBar.classList.add("health-warning");
+                } else {
+                    healthBar.classList.add("health-good");
+                }
+                
+                // Calculate predictive failure
+                if (component.health < component.warningThreshold && component.health > component.failureThreshold) {
+                    // Calculate estimated time to failure with more variation based on metrics
+                    const remainingHealth = component.health - component.failureThreshold;
+                    
+                    // Calculate more realistic time to failure based on outlier metrics
+                    let metricMultiplier = 1.0;
+                    const outlierMetrics = getOutlierMetrics(component.metrics);
+                    if (outlierMetrics.length > 0) {
+                        metricMultiplier = 1.0 - (outlierMetrics.length * 0.1);
+                    }
+                    
+                    const estimatedTimeToFailure = remainingHealth / (component.degradationRate * conveyorSpeed * wearMultiplier * metricMultiplier);
+                    
+                    // Add days to current simulation date
+                    const failureDate = new Date(simulationDate.getTime() + (estimatedTimeToFailure * 10000));
+                    
+                    // Format the failure date
+                    const formattedDate = failureDate.toLocaleDateString();
+                    
+                    // Calculate hours until failure (for UI display) - use a much higher multiplier for more realistic times
+                    const hoursUntilFailure = Math.round(estimatedTimeToFailure * 10); // increased from 2.8
+                    
+                    // Get random failure type - weighted by outlier metrics if available
+                    let failureType;
+                    if (outlierMetrics.length > 0) {
+                        // Choose a failure more related to the worst metric
+                        const worstMetric = outlierMetrics[0].name;
+                        switch (key) {
+                            case 'motor':
+                                failureType = worstMetric === 'temperature' ? "Motor Overheating" : 
+                                             (worstMetric === 'vibration' ? "Drive Motor Issues" : "Electrical System Issues");
+                                break;
+                            case 'belt':
+                                failureType = worstMetric === 'alignment' ? "Belt Misalignment" : "Belt Tension Issues";
+                                break;
+                            case 'bearing':
+                                failureType = worstMetric === 'vibration' ? "Worn Bearings" : "Structural Fatigue";
+                                break;
+                            case 'roller':
+                                failureType = worstMetric === 'runout' ? "Roller Damage" : 
+                                             (worstMetric === 'surfaceWear' ? "Drive Pulley Wear" : "Material Buildup");
+                                break;
+                            default:
+                                failureType = component.failures[Math.floor(Math.random() * component.failures.length)];
+                        }
+                    } else {
+                        failureType = component.failures[Math.floor(Math.random() * component.failures.length)];
+                    }
+                    
+                    // Build technical details display with the key metrics
+                    let technicalDetails = '<div class="technical-details">';
+                    
+                    // Add abnormal metrics first
+                    outlierMetrics.forEach(metric => {
+                        const trend = getMetricTrend(component, metric.name);
+                        const trendClass = trend > 0 ? 'trend-up' : (trend < 0 ? 'trend-down' : 'trend-stable');
+                        const trendSymbol = trend > 0 ? '↑' : (trend < 0 ? '↓' : '→');
+                        
+                        technicalDetails += `<div class="metric"><span class="metric-label">${metric.name}:</span> <span class="metric-value ${trendClass}">${metric.value.toFixed(2)}${metric.unit} ${trendSymbol}</span></div>`;
+                    });
+                    
+                    // Add a couple normal metrics
+                    const normalMetrics = Object.keys(component.metrics)
+                        .filter(m => !outlierMetrics.some(out => out.name === m))
+                        .slice(0, 2);
+                    
+                    normalMetrics.forEach(metricName => {
+                        const metric = component.metrics[metricName];
+                        const trend = getMetricTrend(component, metricName);
+                        const trendClass = 'trend-stable';
+                        
+                        technicalDetails += `<div class="metric"><span class="metric-label">${metricName}:</span> <span class="metric-value ${trendClass}">${metric.value.toFixed(2)}${metric.unit}</span></div>`;
+                    });
+                    
+                    technicalDetails += '</div>';
+                    
+                    // Calculate confidence based on available history and metric stability
+                    let confidence = 75 + (component.history.length / 50 * 15);
+                    if (outlierMetrics.length > 0) {
+                        confidence -= outlierMetrics.length * 5;
+                    }
+                    confidence = Math.min(Math.max(confidence, 60), 95);
+                    
+                    // Update prediction display
+                    document.getElementById(`${key}-prediction`).innerHTML = 
+                        `<div class="predicted-failure">
+                            Predicted <strong>${failureType}</strong> by <span class="failure-time">${formattedDate}</span>
+                            <br>Prediction confidence: ${confidence.toFixed(1)}%
+                            ${technicalDetails}
+                        </div>`;
+                        
+                    // Add to predictive warnings for dashboard
+                    let readableComponentName = '';
+                    switch(key) {
+                        case 'motor': readableComponentName = 'Drive Motor'; break;
+                        case 'belt': readableComponentName = 'ConveyorBelt'; break;
+                        case 'bearing': readableComponentName = 'Bearings'; break;
+                        case 'roller': readableComponentName = 'Rollers'; break;
+                    }
+                    
+                    // Create a more user-friendly message based on the component and failure type
+                    let userMessage = '';
+                    switch(failureType) {
+                        case 'Motor Overheating':
+                            userMessage = 'Drive motor temperature increasing';
+                            break;
+                        case 'Belt Misalignment':
+                            userMessage = 'Belt alignment drift detected';
+                            break;
+                        case 'Belt Tension Issues':
+                            userMessage = 'Belt tension will require adjustment';
+                            break;
+                        case 'Worn Bearings':
+                            userMessage = 'Bearing lubrication low';
+                            break;
+                        case 'Roller Damage':
+                            userMessage = 'Roller surface irregularity detected';
+                            break;
+                        case 'Drive Pulley Wear':
+                            userMessage = 'Drive pulley efficiency decreasing';
+                            break;
+                        case 'Material Buildup':
+                            userMessage = 'Material accumulation on rollers';
+                            break;
+                        case 'Structural Fatigue':
+                            userMessage = 'Bearing structural integrity decreasing';
+                            break;
+                        case 'Drive Motor Issues':
+                            userMessage = 'Drive motor vibration increasing';
+                            break;
+                        case 'Electrical System Issues':
+                            userMessage = 'Electrical system anomalies detected';
+                            break;
+                        default:
+                            userMessage = `${failureType} predicted`;
+                    }
+                    
+                    // If it's a roller component with surface wear issues, make the message match the snapshot
+                    if (key === 'roller' && failureType.includes('Pulley Wear')) {
+                        userMessage = 'Roller surface wear pattern emerging';
+                    }
+                    
+                    predictiveWarnings.push({
+                        component: readableComponentName,
+                        message: userMessage,
+                        hours: hoursUntilFailure,
+                        confidence: confidence,
+                        type: key // Add the component type for sorting
+                    });
+                    
+                } else if (component.health <= component.failureThreshold) {
+                    // Already in failure state
+                    const outlierMetrics = getOutlierMetrics(component.metrics);
+                    let failureType;
+                    
+                    if (outlierMetrics.length > 0) {
+                        // Choose a failure more related to the worst metric
+                        const worstMetric = outlierMetrics[0].name;
+                        switch (key) {
+                            case 'motor':
+                                failureType = worstMetric === 'temperature' ? "Motor Overheating" : 
+                                             (worstMetric === 'vibration' ? "Drive Motor Issues" : "Electrical System Issues");
+                                break;
+                            case 'belt':
+                                failureType = worstMetric === 'alignment' ? "Belt Misalignment" : "Belt Tension Issues";
+                                break;
+                            case 'bearing':
+                                failureType = worstMetric === 'vibration' ? "Worn Bearings" : "Structural Fatigue";
+                                break;
+                            case 'roller':
+                                failureType = worstMetric === 'runout' ? "Roller Damage" : 
+                                             (worstMetric === 'surfaceWear' ? "Drive Pulley Wear" : "Material Buildup");
+                                break;
+                            default:
+                                failureType = component.failures[Math.floor(Math.random() * component.failures.length)];
+                        }
+                    } else {
+                        failureType = component.failures[Math.floor(Math.random() * component.failures.length)];
+                    }
+                    
+                    // Build technical details with all critical metrics
+                    let technicalDetails = '<div class="technical-details">';
+                    
+                    // Add all metrics, highlight the bad ones
+                    Object.keys(component.metrics).forEach(metricName => {
+                        const metric = component.metrics[metricName];
+                        const isOutlier = isMetricOutlier(metric);
+                        const trend = getMetricTrend(component, metricName);
+                        const trendClass = isOutlier ? 'trend-up' : 'trend-stable';
+                        const trendSymbol = isOutlier ? '↑' : '→';
+                        
+                        technicalDetails += `<div class="metric"><span class="metric-label">${metricName}:</span> <span class="metric-value ${trendClass}">${metric.value.toFixed(2)}${metric.unit} ${trendSymbol}</span></div>`;
+                    });
+                    
+                    technicalDetails += '</div>';
+                    
+                    document.getElementById(`${key}-prediction`).innerHTML = 
+                        `<div class="predicted-failure" style="border-left-color: #cc0000; background-color: rgba(204, 0, 0, 0.2);">
+                            <strong>FAILURE DETECTED:</strong> ${failureType}
+                            ${technicalDetails}
+                            <strong>IMMEDIATE MAINTENANCE REQUIRED</strong>
+                        </div>`;
+                    
+                    // Generate actual alert if not already done
+                    if (Math.random() < 0.01 && !activeAlerts.some(a => a.message.includes(failureType))) {
+                        generateSpecificAlert(key, failureType, "critical");
+                    }
+                } else {
+                    // No warning needed
+                    document.getElementById(`${key}-prediction`).innerHTML = '';
+                }
+            });
+            
+            // Update the dashboard with alerts and predictions
+            updateDashboard();
+        }
+
+        // Helper function to update component metrics realistically
+        function updateComponentMetrics(key, component, deltaTime, wearMultiplier) {
+            // Higher values for randomness to create more visible changes
+            const randomFactor = 0.05; 
+            const healthImpact = (100 - component.health) / 100 * 2; // More impact as health decreases
+            
+            Object.keys(component.metrics).forEach(metricName => {
+                const metric = component.metrics[metricName];
+                
+                // Calculate how much to change the metric
+                let change = 0;
+                
+                // Base random fluctuation
+                change += (Math.random() - 0.5) * randomFactor;
+                
+                // Health impact - metrics get worse as health decreases
+                change += healthImpact * randomFactor * (Math.random() * 0.5);
+                
+                // System wear impact
+                change += systemWear / 100 * randomFactor * (Math.random() * 0.3);
+                
+                // Speed impact
+                change += (conveyorSpeed - 0.5) * randomFactor * (Math.random() * 0.2);
+                
+                // Apply the change with directional bias based on health
+                // When health is good, metrics tend to stay in normal range
+                // When health declines, metrics tend to move toward abnormal values
+                if (component.health > 70) {
+                    // Good health - bias toward normal values
+                    if (metric.value > metric.normal.max || metric.value < metric.normal.min) {
+                        // Outside normal range, strong correction toward normal
+                        const target = metric.value > metric.normal.max ? metric.normal.max : metric.normal.min;
+                        metric.value = metric.value + (target - metric.value) * 0.1;
+                    } else {
+                        // Inside normal range, small random changes
+                        metric.value += change * 0.5;
+                    }
+                } else {
+                    // Poor health - tendency to drift outside normal
+                    if (component.health < 40) {
+                        // Very poor health, strong bias toward abnormal
+                        if (Math.random() > 0.5) {
+                            // Bias toward max
+                            metric.value += Math.abs(change) * 1.5;
+                        } else {
+                            // Bias toward min
+                            metric.value -= Math.abs(change) * 1.5;
+                        }
+                    } else {
+                        // Moderate health problems, modest bias toward abnormal
+                        metric.value += change * 2.0;
+                    }
+                }
+                
+                // Enforce reasonable limits to prevent extreme values
+                const range = metric.normal.max - metric.normal.min;
+                const absoluteMin = metric.normal.min - range * 0.5;
+                const absoluteMax = metric.normal.max + range * 1.0;
+                
+                metric.value = Math.max(absoluteMin, Math.min(absoluteMax, metric.value));
+            });
+        }
+
+        // Helper function to identify which metrics are outside normal range
+        function getOutlierMetrics(metrics) {
+            const outliers = [];
+            
+            Object.keys(metrics).forEach(name => {
+                const metric = metrics[name];
+                if (isMetricOutlier(metric)) {
+                    outliers.push({
+                        name: name,
+                        value: metric.value,
+                        unit: metric.unit,
+                        deviation: Math.max(
+                            (metric.value - metric.normal.max) / (metric.normal.max - metric.normal.min),
+                            (metric.normal.min - metric.value) / (metric.normal.max - metric.normal.min)
+                        )
+                    });
+                }
+            });
+            
+            // Sort by deviation (most severe first)
+            outliers.sort((a, b) => b.deviation - a.deviation);
+            
+            return outliers;
+        }
+
+        // Helper function to check if a metric is outside normal range
+        function isMetricOutlier(metric) {
+            return metric.value > metric.normal.max || metric.value < metric.normal.min;
+        }
+
+        // Helper function to calculate trend for a metric based on history
+        function getMetricTrend(component, metricName) {
+            if (component.history.length < 5) return 0; // Not enough data
+            
+            // Get recent values
+            const recentValues = component.history.slice(-5).map(h => h.metrics[metricName].value);
+            
+            // Calculate simple linear regression slope
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            const n = recentValues.length;
+            
+            for (let i = 0; i < n; i++) {
+                sumX += i;
+                sumY += recentValues[i];
+                sumXY += i * recentValues[i];
+                sumX2 += i * i;
+            }
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            
+            // Normalize the slope relative to the normal range of the metric
+            const normalRange = component.metrics[metricName].normal.max - component.metrics[metricName].normal.min;
+            const normalizedSlope = slope / normalRange * 20; // Scale to make trends more visible
+            
+            // Return: positive = upward trend, negative = downward trend, 0 = stable
+            if (Math.abs(normalizedSlope) < 0.05) return 0;
+            return normalizedSlope;
+        }
+
+        // Function to generate an alert for a specific failure type
+        function generateSpecificAlert(componentKey, failureType, alertType = "warning") {
+            // Create alert message
+            let message;
+            if (alertType === "warning") {
+                message = `WARNING: Possible ${failureType} detected. Maintenance recommended.`;
+            } else {
+                message = `CRITICAL: ${failureType} imminent. Immediate maintenance required!`;
+                
+                // Slow down conveyor for critical issues
+                conveyorSpeed = 0.4;
+                document.getElementById('speed').textContent = "40% (REDUCED)";
+            }
+            
+            // Add to alerts
+            const alert = { 
+                type: alertType, 
+                message, 
+                time: Date.now(),
+                componentKey // Store the component key for grouping alerts
+            };
+            activeAlerts.push(alert);
+            
+            // Update UI
+            updateAlertDisplay();
+            updateDashboard();
+            
+            // Remove alert after some time
+            setTimeout(() => {
+                const index = activeAlerts.indexOf(alert);
+                if (index > -1) {
+                    activeAlerts.splice(index, 1);
+                    updateAlertDisplay();
+                    updateDashboard();
+                    
+                    // Reset speed if critical alert is cleared
+                    if (alertType === "critical" && !activeAlerts.some(a => a.type === "critical")) {
+                        conveyorSpeed = 1;
+                        document.getElementById('speed').textContent = "100%";
+                    }
+                }
+            }, alertType === "critical" ? 15000 : 10000);
+        }
+
+        function updateDashboard() {
+            // Update status indicator
+            const statusIndicator = document.getElementById('dashboard-status-indicator');
+            statusIndicator.className = 'status-indicator';
+            
+            // Set status indicator color based on current state
+            if (conveyorStatus === 'critical') {
+                statusIndicator.classList.add('status-critical');
+                document.getElementById('dashboard-status-text').textContent = 'Maintenance Required';
+            } else if (conveyorStatus === 'warning') {
+                statusIndicator.classList.add('status-warning');
+                document.getElementById('dashboard-status-text').textContent = 'Maintenance Recommended';
+            } else {
+                statusIndicator.classList.add('status-normal');
+                document.getElementById('dashboard-status-text').textContent = 'Normal Operation';
+            }
+            
+            // Update active alerts
+            const alertsContainer = document.getElementById('dashboard-alerts');
+            alertsContainer.innerHTML = '';
+            
+            if (activeAlerts.length === 0) {
+                alertsContainer.innerHTML = '<div style="color: #999; font-size: 12px; padding: 5px;">No active alerts</div>';
+            } else {
+                // Group alerts by component for better display
+                const groupedAlerts = {};
+                
+                activeAlerts.forEach(alert => {
+                    // Extract component name from alert message
+                    let componentKey = 'system';
+                    Object.keys(components).forEach(key => {
+                        if (alert.componentKey) {
+                            componentKey = alert.componentKey;
+                        } else if (alert.message.toLowerCase().includes(key)) {
+                            componentKey = key;
+                        }
+                    });
+                    
+                    if (!groupedAlerts[componentKey]) {
+                        groupedAlerts[componentKey] = [];
+                    }
+                    
+                    groupedAlerts[componentKey].push(alert);
+                });
+                
+                // Render grouped alerts
+                Object.keys(groupedAlerts).forEach(componentKey => {
+                    const alerts = groupedAlerts[componentKey];
+                    
+                    // Get a readable component name
+                    let componentName = componentKey.charAt(0).toUpperCase() + componentKey.slice(1);
+                    if (componentKey === 'motor') componentName = 'Drive Motor';
+                    if (componentKey === 'belt') componentName = 'ConveyorBelt';
+                    
+                    // Get the alert message, use only the first alert in the group
+                    const alertMsg = alerts[0].message.split(':').pop().trim().split('.')[0];
+                    
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `alert-item ${alerts[0].type === 'warning' ? 'warning-item' : ''}`;
+                    alertDiv.innerHTML = `
+                        <div class="alert-component">${componentName}: ${alertMsg}</div>
+                    `;
+                    
+                    alertsContainer.appendChild(alertDiv);
+                });
+            }
+            
+            // Update predictive warnings
+            const predictionsContainer = document.getElementById('dashboard-predictions');
+            predictionsContainer.innerHTML = '';
+            
+            if (predictiveWarnings.length === 0) {
+                predictionsContainer.innerHTML = '<div style="color: #999; font-size: 12px; padding: 5px;">No predictions available</div>';
+                document.getElementById('prediction-count').textContent = '0';
+            } else {
+                // Sort predictions by hours until failure (ascending)
+                predictiveWarnings.sort((a, b) => a.hours - b.hours);
+                
+                document.getElementById('prediction-count').textContent = predictiveWarnings.length.toString();
+                
+                // Only show the top 3 predictions
+                const displayWarnings = predictiveWarnings.slice(0, 3);
+                
+                displayWarnings.forEach(warning => {
+                    const predDiv = document.createElement('div');
+                    predDiv.className = 'prediction-item';
+                    predDiv.innerHTML = `
+                        <div class="prediction-time">-${warning.hours}h</div>
+                        <div class="alert-component">${warning.component}</div>
+                        <div class="alert-message">${warning.message}</div>
+                        <div class="confidence-row">
+                            <span class="confidence-icon">↑</span>
+                            Confidence: ${Math.round(warning.confidence)}%
+                        </div>
+                    `;
+                    
+                    predictionsContainer.appendChild(predDiv);
+                });
+            }
+        }
+
+        // Initialize components with some wear to show predictions immediately
+        function initializeComponentHealthWithWear() {
+            // Belt has more wear but not as much as before
+            components.belt.health = 65; // increased from 45
+            
+            // Rollers also showing some wear
+            components.roller.health = 75; // increased from 65
+            
+            // Update metrics to match the wear
+            components.belt.metrics.tension.value = 38.5; // High tension, near limit but not as extreme
+            components.belt.metrics.alignment.value = 0.75; // Slight misalignment
+            
+            components.roller.metrics.surfaceWear.value = 15; // lower surface wear (was 18)
+            components.roller.metrics.runout.value = 0.35; // lower runout (was 0.38)
+            
+            // Bearings showing lubrication issues
+            components.bearing.health = 70; // increased from 60
+            components.bearing.metrics.lubrication.value = 83; // Low lubrication but not as low (was 81)
+            
+            // Update health displays
+            Object.keys(components).forEach(key => {
+                const component = components[key];
+                document.getElementById(`${key}-health-value`).textContent = `${Math.floor(component.health)}%`;
+                
+                const healthBar = document.getElementById(`${key}-health-bar`);
+                healthBar.style.width = `${component.health}%`;
+                
+                if (component.health < component.failureThreshold) {
+                    healthBar.className = "health-value health-critical";
+                } else if (component.health < component.warningThreshold) {
+                    healthBar.className = "health-value health-warning";
+                } else {
+                    healthBar.className = "health-value health-good";
+                }
+            });
+            
+            // Add some history data for trends
+            simulationTime = 50; // Start with some simulation time
+            
+            // Create history data points for components with more gradual changes
+            for (let i = 0; i < 10; i++) {
+                const timePoint = i * 5;
+                
+                // Add progressive degradation of belt tension
+                components.belt.history.push({
+                    time: timePoint,
+                    health: 65 + (10-i)/3, // slower degradation
+                    metrics: {
+                        tension: { value: 38.0 - (10-i)*0.05, unit: "kN", normal: { min: 30, max: 40 } },
+                        alignment: { value: 0.7 - (10-i)*0.005, unit: "mm", normal: { min: 0, max: 1.0 } },
+                        wear: { value: 0.05 + i*0.005, unit: "mm", normal: { min: 0, max: 0.5 } },
+                        temperature: { value: 38, unit: "°C", normal: { min: 20, max: 45 } }
+                    }
+                });
+                
+                // Add progressive degradation of roller surface
+                components.roller.history.push({
+                    time: timePoint,
+                    health: 75 + (10-i)/4, // slower degradation
+                    metrics: {
+                        runout: { value: 0.30 + i*0.003, unit: "mm", normal: { min: 0, max: 0.4 } },
+                        surfaceWear: { value: 12 + i*0.2, unit: "%", normal: { min: 0, max: 20 } },
+                        rotationalSpeed: { value: 120, unit: "RPM", normal: { min: 115, max: 125 } },
+                        loading: { value: 55, unit: "%", normal: { min: 20, max: 80 } }
+                    }
+                });
+                
+                // Add progressive degradation of bearing lubrication
+                components.bearing.history.push({
+                    time: timePoint,
+                    health: 70 + (10-i)/3, // slower degradation
+                    metrics: {
+                        vibration: { value: 0.8 + i*0.03, unit: "mm/s", normal: { min: 0, max: 3.0 } },
+                        temperature: { value: 45 + i*0.1, unit: "°C", normal: { min: 30, max: 60 } },
+                        lubrication: { value: 90 - i*0.3, unit: "%", normal: { min: 80, max: 100 } },
+                        noise: { value: 68 + i*0.1, unit: "dB", normal: { min: 60, max: 80 } }
+                    }
+                });
+            }
+        }
+
+        // Generate initial alerts and predictions to show immediately
+        function generateInitialAlertsAndPredictions() {
+            // Create a bearing lubrication alert
+            generateSpecificAlert('bearing', 'Worn Bearings', 'warning');
+            
+            // Create a roller wear alert
+            generateSpecificAlert('roller', 'Drive Pulley Wear', 'warning');
+            
+            // Force an update to component health predictions
+            updateComponentHealth(0.1);
+            
+            // Make sure the dashboard is updated
+            updateDashboard();
+        }
+    </script>
+</body>
+</html> 

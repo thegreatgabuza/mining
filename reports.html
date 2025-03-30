@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Maintenance Reports Dashboard</title>
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      color: #2c3e50;
+    }
+    header p {
+      font-size: 1.2rem;
+      color: #555;
+    }
+    .dashboard-section {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+      color: #2c3e50;
+      border-bottom: 2px solid #2980b9;
+      padding-bottom: 5px;
+    }
+    /* Overview Cards */
+    .overview {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin: 10px;
+      flex: 1 1 200px;
+      text-align: center;
+    }
+    .card h2 {
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+      color: #2980b9;
+    }
+    .card p {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background: #2980b9;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      background: #2980b9;
+      color: #fff;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      transition: background 0.3s ease;
+    }
+    .btn:hover {
+      background: #1f6391;
+    }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Maintenance Reports Dashboard</h1>
+    <p>Overview of simulation data and system performance</p>
+  </header>
+
+  <!-- Overview Cards Section -->
+  <section class="overview dashboard-section">
+    <div class="card">
+      <h2>System Wear</h2>
+      <p>65%</p>
+    </div>
+    <div class="card">
+      <h2>Belt Speed</h2>
+      <p>100%</p>
+    </div>
+    <div class="card">
+      <h2>Active Alerts</h2>
+      <p>2</p>
+    </div>
+    <div class="card">
+      <h2>Predictions</h2>
+      <p>3</p>
+    </div>
+  </section>
+
+  <!-- Component Health Section -->
+  <section class="dashboard-section">
+    <h2 class="section-title">Component Health</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Health</th>
+          <th>Status</th>
+          <th>Last Maintenance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Drive Motor</td>
+          <td>85%</td>
+          <td>Normal</td>
+          <td>2025-03-25</td>
+        </tr>
+        <tr>
+          <td>Belt Tension</td>
+          <td>65%</td>
+          <td>Warning</td>
+          <td>2025-03-24</td>
+        </tr>
+        <tr>
+          <td>Bearings</td>
+          <td>70%</td>
+          <td>Warning</td>
+          <td>2025-03-23</td>
+        </tr>
+        <tr>
+          <td>Rollers</td>
+          <td>75%</td>
+          <td>Normal</td>
+          <td>2025-03-25</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Maintenance Alerts Section -->
+  <section class="dashboard-section">
+    <h2 class="section-title">Maintenance Alerts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Alert</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>10:15 AM</td>
+          <td>Belt Misalignment detected</td>
+          <td>Warning</td>
+        </tr>
+        <tr>
+          <td>10:45 AM</td>
+          <td>Motor Overheating imminent</td>
+          <td>Critical</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Predictive Maintenance Section -->
+  <section class="dashboard-section">
+    <h2 class="section-title">Predictive Maintenance</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Predicted Failure</th>
+          <th>Estimated Date</th>
+          <th>Confidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Drive Motor</td>
+          <td>Motor Overheating</td>
+          <td>2025-03-30</td>
+          <td>88%</td>
+        </tr>
+        <tr>
+          <td>Belt Tension</td>
+          <td>Belt Misalignment</td>
+          <td>2025-04-02</td>
+          <td>75%</td>
+        </tr>
+        <tr>
+          <td>Bearings</td>
+          <td>Worn Bearings</td>
+          <td>2025-04-05</td>
+          <td>80%</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Simulation History Section -->
+  <section class="dashboard-section">
+    <h2 class="section-title">Simulation History</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time Stamp</th>
+          <th>Event</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2025-03-25 09:00 AM</td>
+          <td>Product Created</td>
+          <td>Material: Bauxite</td>
+        </tr>
+        <tr>
+          <td>2025-03-25 09:05 AM</td>
+          <td>Maintenance Performed</td>
+          <td>System wear reset to 15%</td>
+        </tr>
+        <tr>
+          <td>2025-03-25 09:10 AM</td>
+          <td>Alert Generated</td>
+          <td>Belt tension warning detected</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <a href="index.html" class="btn">Back to Landing Page</a>
+  </footer>
+</body>
+</html>
