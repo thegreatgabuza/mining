@@ -22,6 +22,7 @@
       justify-content: center;
       text-align: center;
       padding: 20px;
+      position: relative;
     }
     header {
       margin-bottom: 30px;
@@ -74,11 +75,26 @@
     .btn:hover {
       background-color: #218838;
     }
+    /* Footer for Powered by Quantilytix */
+    .powered-by {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+    .powered-by img {
+      height: 40px;
+      width: auto;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>South 32 Predictive Maintenance System</h1>
+    <h1>South 32 Predictive Maintenance  System</h1>
     <p>Optimizing performance with predictive analytics for efficient maintenance and operations.</p>
   </header>
   <div class="container-wrapper">
@@ -92,6 +108,11 @@
       <p>Review detailed reports and analytics on system performance and maintenance alerts.</p>
       <a href="reports.html" class="btn">View Reports</a>
     </div>
+  </div>
+  <div class="powered-by">
+   
+     <span>Powered by</span>
+     <img src="log11.png" alt="Quantilytix Logo">
   </div>
 </body>
 </html>
