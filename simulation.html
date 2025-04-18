@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Factory Conveyor Belt Simulation</title>
+    <title>Quantilytix Mining Predictive Maintenance - Simulation</title>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <style>
         body {
@@ -324,10 +324,19 @@
         .trend-stable {
             color: #e6c700;
         }
+
+        .brand-logo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 200px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
     <div id="container">
+        <img src="quantilytix-logo.png" alt="Quantilytix Logo" class="brand-logo">
         <div id="info">
             <h2>Conveyor Belt Simulation</h2>
             <p>System Status: <span id="status" class="normal">Normal</span></p>
